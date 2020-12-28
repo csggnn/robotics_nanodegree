@@ -2,10 +2,10 @@
 
 <launch>
 
-  <!-- World File. This definition just sets a default world file name -->
+  <!-- World File -->
   <arg name="world_file" default="$(find my_robot)/worlds/empty.world"/>
 
-  <!-- Launch Gazebo World. The first include line is where most magic happens. The last line adds the world configuration specidies by word_file -->
+  <!-- Launch Gazebo World -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="use_sim_time" value="true"/>
     <arg name="debug" value="false"/>
@@ -14,3 +14,4 @@
   </include>
 
 </launch>
+
