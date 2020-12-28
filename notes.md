@@ -1,7 +1,27 @@
 #Generic#
 pass: robo-nd
 
+
+
 #Ros essentials#
+
+## Basic commands ##
+
+create a catkin_ws/src folder. from catkin_ws/src:
+
+```
+   catkin_init_workspace	#links the makefile
+   catkin_create_pkg pkg	#initializes the makefile and the package.xml for the package
+```
+from catkin_ws:
+
+```
+   catkin_make 			#in pkg there should be something to make
+   source devel/setup.bash 	#initializes the makefile and the package.xml for the package
+
+   rosrun pkg name_of_a_src_file
+   roslaunch pkg launch_file.launch
+```
 2 options for communication  between nodes: publish/subscribe or Services
 
 ##Publisher/Subscriber##
