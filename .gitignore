@@ -1,4 +1,4 @@
 myrobot/**
 vm/**
-catkin_ws/devel
-catkin_ws/build
+**/devel
+**/build
