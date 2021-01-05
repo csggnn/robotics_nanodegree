@@ -1,0 +1,18 @@
+<launch>
+
+  <!-- the turtlesim simulation in gazebo -->
+  <include file="$(find turtlebot_gazebo)/launch/turtlebot_world.launch" /> 
+  
+  <!-- teleop to move the robot -->    
+  <include file="$(find turtlebot_teleop)/launch/keyboard_teleop.launch" />
+  
+  <!-- extended kalman filtering to filter and fuse odometry and imu data-->
+  <include file="$(find robot_pose_ekf)/robot_pose_ekf.launch" /> 
+  
+  <!-- create trajectory to turn filtered and non-filtered poses into trajectories -->
+  <include file="$(find odom_to_trajectory)/launch/create_trajectory.launch" />
+  
+  <!-- rviz with saved default configuration -->
+  <node pkg="rviz" type="rviz" name="rviz_saved_cfg" args="-d /home/robond/course_repo/robotics_nanodegree/kalman/kalman.rviz" />
+  
+</launch>
