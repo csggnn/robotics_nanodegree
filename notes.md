@@ -3,8 +3,9 @@ pass: robo-nd
 personal access token> a6f356684e7524204d5ab62367fd98bdb9ed752c
 
 
-#Ros essentials#
 
+
+#Ros essentials#
 
 
 ## Basic commands ##
@@ -25,6 +26,12 @@ from catkin_ws:
    roslaunch pkg launch_file.launch
 ```
 2 options for communication  between nodes: publish/subscribe or Services
+
+## Cloning a Repo ## 
+
+Remember that catkin_init_workspace creates a link to a makefile in the ros installation directory. Cloning a repo will break this link! 
+remove the CMakeLists.txt link in `catkin_ws/src` and generate it again from the  `catkin_ws/src`  folder via `catkin_init_workspace`
+
 
 ##Publisher/Subscriber##
 In the C++ code, the publisher must advertise its messages:
