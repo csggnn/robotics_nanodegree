@@ -1,0 +1,4 @@
+topic: /udacity_bot/laser/scan, in costmap_common_params
+
+roslaunch loc_robot amcl.launch
+roslaunch loc_robot world.launch
