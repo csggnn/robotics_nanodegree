@@ -1,0 +1,40 @@
+<launch>
+
+<arg name="map_file" default="$(find loc_robot)/maps/small_world_map.yaml" />
+<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+<!-- i suppose amcl is just available form somewhere - is a basic part of ros? -->
+<node name="amcl" pkg="amcl" type="amcl" output="screen" >
+
+  <param name="odom_frame_id" value="odom"/>
+  <param name="odom_model_type" value="diff-corrected"/>
+  <param name="base_frame_id" value="robot_footprint"/>
+  <param name="global_frame_id" value="map"/>
+
+  <param name="initial_pose_x" value="0"/>
+  <param name="initial_pose_y" value="0"/>
+  <param name="initial_pose_a" value="-1.57"/>
+  <param name="update_min_a" value="0.3"/>
+  <param name="max_particles" value="200"/>
+
+  <param name="laser_max_beams" value="20"/>
+  <param name="laser_z_hit" value="0.98"/>
+  <param name="laser_z_rand" value="0.02"/>
+
+</node>
+
+<node name="move_base" pkg="move_base" type="move_base" respawn="false" output="screen">
+
+
+  <param name="base_global_planner" value="navfn/NavfnROS" />
+  <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
+
+  <rosparam file="$(find loc_robot)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+  <rosparam file="$(find loc_robot)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+  <rosparam file="$(find loc_robot)/config/local_costmap_params.yaml" command="load" />
+  <rosparam file="$(find loc_robot)/config/global_costmap_params.yaml" command="load" />
+  <rosparam file="$(find loc_robot)/config/base_local_planner_params.yaml" command="load" />
+
+</node>
+
+</launch>
