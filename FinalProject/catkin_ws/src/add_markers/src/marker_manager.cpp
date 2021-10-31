@@ -1,64 +1,92 @@
 #include <add_marker/marker_manager.h>
 
-
-MarketManager::MarketManager(std::vector<ObjectPickingTask> const& tasks) { 
+MarketManager::MarketManager(std::vector<ObjectPickingTask> const &tasks)
+{
   tasks_ = tasks;
 }
 
+visualization_msgs::Marker drawMarker(int obj_id, DrawMarkerType type) const
+{
 
-void MarketManager::initialize() {
-  visualization_msgs::Marker dst_marker;
+  auto const& t = tasks_[obj_id];
+  visualization_msgs::Marker marker;
 
-  dst_marker.scale.x = 0.5;
-  dst_marker.scale.y = 0.5;
-  dst_marker.scale.z = 0.05;
+  marker.pose.orientation.x = 0.0;
+  marker.pose.orientation.y = 0.0;
+  marker.pose.orientation.z = 0.0;
+  marker.pose.orientation.w = 1.0;
 
-  dst_marker.pose.orientation.x = 0.0;
-  dst_marker.pose.orientation.y = 0.0;
-  dst_marker.pose.orientation.z = 0.0;
-  dst_marker.pose.orientation.w = 1.0;
+  marker.pose.position.x = 0.0;
 
-  dst_marker.color.a = 1.0;
+  marker.header.frame_id = "/map";
+  marker.header.stamp = ros::Time::now();
+  marker.lifetime = ros::Duration();
 
-  dst_marker.pose.position.z = 0;
-  
-  dst_marker.ns = "destination_locations";
-  
-  dst_marker.header.frame_id = "/map";
+  marker.id = obj_id;
 
-  dst_marker.type = visualization_msgs::Marker::CYLINDER;
-  dst_marker.action = visualization_msgs::Marker::ADD;
-  dst_marker.lifetime = ros::Duration();
+  marker.type = visualization_msgs::Marker::CYLINDER;
 
-  visualization_msgs::Marker obj_marker = dst_marker;
+  marker.color.a = 1.0;
 
-  obj_marker.ns = "objects";
+  /* destination markers look different */
+  if (type == kDst)
+  {
+    marker.scale.x = 0.5;
+    marker.scale.y = 0.5;
+    marker.scale.z = 0.05;
 
-  obj_marker.scale.x = 0.2;
-  obj_marker.scale.y = 0.2;
-  obj_marker.scale.z = 0.3;
+    marker.color.r = t.r * 0.7;
+    marker.color.g = t.g * 0.7;
+    marker.color.b = t.b * 0.7;
 
-  for (int i = 0; i < tasks.size(); i++) {
-    ObjectPickingTask const& t = tasks_[i];
-    dst_marker.id = i;
-    dst_marker.header.stamp = ros::Time::now();
+    marker.ns = "destination_locations";
+  }
+  else
+  {
+    obj_marker.scale.x = 0.2;
+    obj_marker.scale.y = 0.2;
+    obj_marker.scale.z = 0.3;
 
-    dst_marker.pose.position.x = t.dst_x;
-    dst_marker.pose.position.y = t.dst_y;
-  
-    dst_marker.color.r = t.r*0.7;
-    dst_marker.color.g = t.g*0.7;
-    dst_marker.color.b = t.b*0.7;
+    marker.color.r = t.r;
+    marker.color.g = t.g;
+    marker.color.b = t.b;
 
-    obj_marker.id = i;
-    obj_marker.header.stamp = ros::Time::now();
+    marker.ns = "objects";
+  }
 
-    obj_marker.pose.position.x = t.src_x;
-    obj_marker.pose.position.y = t.src_y;
-  
-    obj_marker.color.r = t.r;
-    obj_marker.color.g = t.g;
-    obj_marker.color.b = t.b;
+  /* pick up and start markers are at the start location (although pick up location may not matter with a DELETE) */
+  if ((type = kStart) || (type == kPick))
+  {
+    marker.pose.position.x = t.src_x;
+    marker.pose.position.y = t.src_y;
+  }
+  else
+  {
+    marker.pose.position.x = t.dst_x;
+    marker.pose.position.y = t.dst_y;
+  }
+
+  /* pick up is represented by deleting a marker, all other cases by adding  one */
+  if (type == kPick)
+  {
+    marker.action = visualization_msgs::Marker::DELETE;
+  }
+  else
+  {
+    marker.action = visualization_msgs::Marker::ADD;
+  }
+
+}
+
+void MarketManager::initialize()
+{
+  marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  dive_tg_pub_ = n_.advertise<geometry_msgs::Point>("drive_target", 1);
+
+  for (int i = 0; i < tasks_.size(); i++)
+  {
+    auto obj_marker = drawMarker(tasks_[i], i, kStart);
+    auto dst_marker = drawMarker(tasks_[i], i, kDst);
 
     while (marker_pub.getNumSubscribers() < 1)
     {
@@ -71,49 +99,94 @@ void MarketManager::initialize() {
     }
     marker_pub.publish(dst_marker);
     marker_pub.publish(obj_marker);
-
     sleep(1);
   }
-}
-
-MarketManager::publishDriveGoal(){
-
-  if (curr_tg == 0){
-    target_point_.x = tasks[curr_task].src_x;
-    target_point_.y = tasks[curr_task].src_y;
-  } else {
-    target_point_.x = tasks[curr_task].dst_x;
-    target_point_.y = tasks[curr_task].dst_y;
-  }
-  target_point_.z = 0
-  while (drive_tg_pub.getNumSubscribers() < 1)
-    {
-      if (!ros::ok())
-      {
-        return 0;
-      }
-      ROS_WARN_ONCE("Please create a subscriber to the drive commands");
-      sleep(1);
-    }
-  drive_tg_pub_.publish(target_point_);
-  target_point_valid_ = true;
-}
-
-MarketManager::checkGoalReached(geometry_msgs::Pose const& odom_pose) {
-  double dist_th_sq = 0.1*0.1;
-  if ((odom_pose.position.x - target_point_.x)*(odom_pose.position.x - target_point_.x) + 
-      (odom_pose.position.y - target_point_.y)*(odom_pose.position.y - target_point_.y) < dist_th_sq) {
   
-	sleep(3);
-        /* deal with the current marker */
-       
-        if 
+  if (tasks.size() >0 ) {
+    curr_obj_id_ =0;
+    pickup_task_ = true;
+    publishDriveGoal();
+    checkOdomPos();
+  } else {
+    ROS_INFO("No tasks!");
   }
-
 }
 
-MarkerManager::checkOdomPos(){
-  ros::Subscriber sub = n.subscribe("/odom", 3, &MarketManager::checkGoalReched, this);
+
+
+bool MarkerManager::validCurrTask() const
+{
+  return ((curr_obj_id_ > 0) && (curr_obj_id_ < tasks.size()));
+}
+
+bool MarkerManager::getCurrTaskTg(double &x, double &y) const
+{
+  if (validCurrTask())
+  {
+    x = pickup_task_ ? tasks_[curr_obj_id_].src_x : tasks_[curr_obj_id_].dst_x;
+    y = pickup_task_ ? tasks_[curr_obj_id_].src_y : tasks_[curr_obj_id_].dst_y;
+    return true;
+  }
+  return false;
+}
+
+void MarketManager::publishDriveGoal()
+{
+
+  geometry_msgs::Point target_point;
+  target_point.z = 0;
+   bool valid = getCurrTaskTg(target_point.x, target_point.y);
+
+  if (!valid)
+  {
+    ROS_WARN_ONCE("MarkerManager::publishDriveGoal: there is no valid goal location for current task");
+    return;
+  }
+
+  while (drive_tg_pub.getNumSubscribers() < 1)
+  {
+    if (!ros::ok())
+    {
+      return 0;
+    }
+    ROS_WARN_ONCE("Please create a subscriber to the drive commands");
+    sleep(1);
+  }
+  drive_tg_pub_.publish(target_point);
+}
+
+void MarkerManager::checkGoalReached(geometry_msgs::Pose const &odom_pose)
+{
+  double dist_th_sq = 0.1 * 0.1;
+  double tg_x, tg_y;
+  bool tg_valid = getCurrTaskTg(tg_x, tg_y);
+  if (!tg_valid)
+  {
+    ROS_WARN_ONCE("MarkerManager::checkGolaReached call but no object movement task is active");
+    return;
+  }
+
+  if ((odom_pose.position.x - tg_x) * (odom_pose.position.x - tg_x) +
+          (odom_pose.position.y - tg_y) * (odom_pose.position.y - tg_y) <
+      dist_th_sq)
+  {
+    sleep(2.5);
+    drawMarker(curr_obj_id_, pickup_task_ ? kPick : kDrop);
+    sleep(2.5);
+    pickup_task_ ! pickup_task_;
+    if (pickup_task_) {
+      curr_obj_id_ = curr_obj_id_ + 1;
+    } 
+
+    if (validCurrTask()) 
+      publishDriveGoal();
+    else 
+      ROS_INFO("All tasks completed");
+  }
+}
+
+void MarkerManager::checkOdomPos()
+{
+  ros::Subscriber sub = n_.subscribe("/odom", 3, &MarketManager::checkGoalReched, this);
   ros::spin();
 }
-
