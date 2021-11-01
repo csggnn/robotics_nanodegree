@@ -21,9 +21,9 @@ void driveToGoal(geometry_msgs::Point tg_pos)
 {
   move_base_msgs::MoveBaseGoal goal;
 
-  goal.position = tg_pos;
-  goal.header.frame_id = "map";
-  goal.header.stamp = ros::Time::now();
+  goal.target_pose.position = tg_pos;
+  goal.target_pose.header.frame_id = "map";
+  goal.target_pose.header.stamp = ros::Time::now();
   ROS_INFO("Sending goal");
   ac.sendGoal(goal);
   // Wait an infinite time for the results
