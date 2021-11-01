@@ -133,8 +133,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(pick_objects_test src/pick_objects.cpp)
-add_executable(pick_objects_managed src/pick_objects_managed.cpp)
+add_executable(pick_objects_test    src/pick_objects.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,6 +149,8 @@ add_executable(pick_objects_managed src/pick_objects_managed.cpp)
 target_link_libraries(pick_objects_test
   ${catkin_LIBRARIES}
 )
+
+add_executable(pick_objects_managed src/pick_objects_managed.cpp)
 target_link_libraries(pick_objects_managed
   ${catkin_LIBRARIES}
 )
