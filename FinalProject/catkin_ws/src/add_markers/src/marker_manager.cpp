@@ -1,6 +1,6 @@
 #include <add_marker/marker_manager.h>
 
-MarketManager::MarketManager(std::vector<ObjectPickingTask> const &tasks)
+MarkerManager::MarkerManager(std::vector<ObjectPickingTask> const &tasks)
 {
   tasks_ = tasks;
 }
@@ -78,10 +78,10 @@ visualization_msgs::Marker drawMarker(int obj_id, DrawMarkerType type) const
 
 }
 
-void MarketManager::initialize()
+void MarkerManager::start()
 {
   marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-  dive_tg_pub_ = n_.advertise<geometry_msgs::Point>("drive_target", 1);
+  dive_tg_pub_ = n_.advertise<geometry_msgs::Point>("drive_to_point", 1);
 
   for (int i = 0; i < tasks_.size(); i++)
   {
@@ -130,7 +130,7 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
   return false;
 }
 
-void MarketManager::publishDriveGoal()
+void MarkerManager::publishDriveGoal()
 {
 
   geometry_msgs::Point target_point;
@@ -187,6 +187,6 @@ void MarkerManager::checkGoalReached(geometry_msgs::Pose const &odom_pose)
 
 void MarkerManager::checkOdomPos()
 {
-  ros::Subscriber sub = n_.subscribe("/odom", 3, &MarketManager::checkGoalReched, this);
+  ros::Subscriber sub = n_.subscribe("/odom", 3, &MarkerManager::checkGoalReached, this);
   ros::spin();
 }

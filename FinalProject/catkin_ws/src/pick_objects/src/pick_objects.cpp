@@ -32,7 +32,8 @@ int main(int argc, char** argv){
   target_poses[1].orientation.w = 1.5;
 
 
-  for (int p_i = 0; p_i < (int)target_poses.size(); p_i++) {  // Define a position and orientation for the robot to reach
+  for (int p_i = 0; p_i < (int)target_poses.size(); p_i++) {  
+    // Define a position and orientation for the robot to reach
     geometry_msgs::Pose const&  p = target_poses[p_i];
     goal.target_pose.pose = p;
 

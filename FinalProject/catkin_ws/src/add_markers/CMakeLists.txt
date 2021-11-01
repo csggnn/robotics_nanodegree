@@ -102,7 +102,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+   INCLUDE_DIRS include
 #  LIBRARIES add_markers
 #  CATKIN_DEPENDS roscpp visualization_msgs
 #  DEPENDS system_lib
@@ -132,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/add_markers.cpp)
+#add_executable(${PROJECT_NAME}_node src/add_markers.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -145,7 +145,18 @@ add_executable(${PROJECT_NAME}_node src/add_markers.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
+#target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+#)
+
+add_executable(add_markers_test src/add_markers.cpp)
+
+add_executable(manage_tasks_and_markers src/manage_tasks_and_markers.cpp src/marker_manager.cpp)
+
+target_link_libraries(add_markers_test
+   ${catkin_LIBRARIES}
+)
+target_link_libraries(manage_tasks_and_markers
    ${catkin_LIBRARIES}
 )
 
