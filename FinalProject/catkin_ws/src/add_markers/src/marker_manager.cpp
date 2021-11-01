@@ -5,7 +5,7 @@ MarkerManager::MarkerManager(std::vector<ObjectPickingTask> const &tasks)
   tasks_ = tasks;
 }
 
-visualization_msgs::Marker drawMarker(int obj_id, DrawMarkerType type) const
+visualization_msgs::Marker MarkerManager::drawMarker(int obj_id, DrawMarkerType type) const
 {
 
   auto const& t = tasks_[obj_id];
