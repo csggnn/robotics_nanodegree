@@ -17,11 +17,13 @@
 // Define a client for to send goal requests to the move_base server through a SimpleActionClient
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
+MoveBaseClient ac("move_base", true);
+
 void driveToGoal(geometry_msgs::Point tg_pos)
 {
   move_base_msgs::MoveBaseGoal goal;
 
-  goal.target_pose.position = tg_pos;
+  goal.target_pose.pose.position = tg_pos;
   goal.target_pose.header.frame_id = "map";
   goal.target_pose.header.stamp = ros::Time::now();
   ROS_INFO("Sending goal");
@@ -40,9 +42,7 @@ int main(int argc, char **argv)
 {
   // Initialize the simple_navigation_goals node
   ros::init(argc, argv, "pick_objects");
-
   //tell the action client that we want to spin a thread by default
-  MoveBaseClient ac("move_base", true);
 
   // Wait 5 sec for move_base action server to come up
   while (!ac.waitForServer(ros::Duration(5.0)))
