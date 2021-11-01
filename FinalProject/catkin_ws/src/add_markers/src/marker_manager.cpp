@@ -142,16 +142,16 @@ void MarkerManager::publishDriveGoal() const
     return;
   }
 
-  while (drive_tg_pub.getNumSubscribers() < 1)
+  while (drive_pub_.getNumSubscribers() < 1)
   {
     if (!ros::ok())
     {
-      return 0;
+      return;
     }
     ROS_WARN_ONCE("Please create a subscriber to the drive commands");
     sleep(1);
   }
-  drive_tg_pub_.publish(target_point);
+  drive_pub_.publish(target_point);
 }
 
 void MarkerManager::checkReactGoalReached(geometry_msgs::Pose const &odom_pose)
