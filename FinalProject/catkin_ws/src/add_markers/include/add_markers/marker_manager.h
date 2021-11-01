@@ -36,7 +36,7 @@ class MarkerManager
  */
   void start(); 
 
-  enum DrawMarkerType {
+  enum MarkerType {
     kDst = 0,
     kStart,
     kPick, 
@@ -82,8 +82,7 @@ class MarkerManager
   void publishDriveGoal() const;
 
 
-
-  visualization_msgs::Marker drawMarker(int obj_id, DrawMarkerType type) const;
+  void publishMarker(int obj_id, MarkerType type) const;
 
 
   /**
@@ -92,14 +91,14 @@ class MarkerManager
    * 
    * @param odom_pose 
    */
-  void checkGoalReached(geometry_msgs::Pose const& odom_pose);
+  void checkReactGoalReached(geometry_msgs::Pose const& odom_pose);
 
    
   /**
    * @brief subscribes to odometry and keeps on checking whether a goal has been reched.
    * 
    */
-  void checkOdomPos();
+  void spinOnOdomPos();
 
 
 

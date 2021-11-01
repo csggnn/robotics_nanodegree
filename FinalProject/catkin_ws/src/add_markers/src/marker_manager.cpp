@@ -5,7 +5,7 @@ MarkerManager::MarkerManager(std::vector<ObjectPickingTask> const &tasks)
   tasks_ = tasks;
 }
 
-void MarkerManager::drawMarker(int obj_id, MarkerManager::DrawMarkerType type) const
+void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) const
 {
 
   auto const& t = tasks_[obj_id];
@@ -43,9 +43,9 @@ void MarkerManager::drawMarker(int obj_id, MarkerManager::DrawMarkerType type) c
   }
   else
   {
-    obj_marker.scale.x = 0.2;
-    obj_marker.scale.y = 0.2;
-    obj_marker.scale.z = 0.3;
+    marker.scale.x = 0.2;
+    marker.scale.y = 0.2;
+    marker.scale.z = 0.3;
 
     marker.color.r = t.r;
     marker.color.g = t.g;
@@ -96,15 +96,15 @@ void MarkerManager::start()
 
   for (int i = 0; i < tasks_.size(); i++)
   {
-    drawMarker(tasks_[i], i, kStart);
-    drawMarker(tasks_[i], i, kDst);
+    publishMarker(tasks_[i], i, kStart);
+    publishMarker(tasks_[i], i, kDst);
 
   
   if (tasks_.size() >0 ) {
     curr_obj_id_ =0;
     pickup_task_ = true;
     publishDriveGoal();
-    checkOdomPos();
+    spinOnOdomPos();
   } else {
     ROS_INFO("No tasks!");
   }
@@ -153,7 +153,7 @@ void MarkerManager::publishDriveGoal() const
   drive_tg_pub_.publish(target_point);
 }
 
-void MarkerManager::checkGoalReached(geometry_msgs::Pose const &odom_pose)
+void MarkerManager::checkReactGoalReached(geometry_msgs::Pose const &odom_pose)
 {
   double dist_th_sq = 0.1 * 0.1;
   double tg_x, tg_y;
@@ -169,7 +169,7 @@ void MarkerManager::checkGoalReached(geometry_msgs::Pose const &odom_pose)
       dist_th_sq)
   {
     sleep(2.5);
-    drawMarker(curr_obj_id_, pickup_task_ ? kPick : kDrop);
+    publishMarker(curr_obj_id_, pickup_task_ ? kPick : kDrop);
     sleep(2.5);
     pickup_task_ = !pickup_task_;
     if (pickup_task_) {
@@ -183,8 +183,8 @@ void MarkerManager::checkGoalReached(geometry_msgs::Pose const &odom_pose)
   }
 }
 
-void MarkerManager::checkOdomPos()
+void MarkerManager::spinOnOdomPos()
 {
-  ros::Subscriber sub = n_.subscribe("/odom", 3, &MarkerManager::checkGoalReached, this);
+  ros::Subscriber sub = n_.subscribe("/odom", 3, &MarkerManager::checkReactGoalReached, this);
   ros::spin();
 }
