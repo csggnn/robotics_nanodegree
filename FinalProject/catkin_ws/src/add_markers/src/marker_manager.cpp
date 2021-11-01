@@ -8,7 +8,7 @@ MarkerManager::MarkerManager(std::vector<ObjectPickingTask> const &tasks)
 void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) const
 {
 
-  auto const& t = tasks_[obj_id];
+  ObjectPickingTask const& t = tasks_[obj_id];
   visualization_msgs::Marker marker;
 
   marker.pose.orientation.x = 0.0;
@@ -96,8 +96,9 @@ void MarkerManager::start()
 
   for (int i = 0; i < tasks_.size(); i++)
   {
-    publishMarker(tasks_[i], i, kStart);
-    publishMarker(tasks_[i], i, kDst);
+    publishMarker(i, kStart);
+    publishMarker(i, kDst);
+  }
 
   
   if (tasks_.size() >0 ) {
