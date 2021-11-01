@@ -26,6 +26,25 @@ struct ObjectPickingTask
 class MarkerManager
 {
 
+  public:
+ 
+  MarkerManager(std::vector<ObjectPickingTask> const& tasks);
+
+/**
+ * @brief  draw all objects and drop off locations
+ * 
+ */
+  void start(); 
+
+  enum DrawMarkerType {
+    kDst = 0,
+    kStart,
+    kPick, 
+    kDrop
+  };
+
+  private:
+
   std::vector<ObjectPickingTask> tasks_;
   ros::NodeHandle n_;
   ros::Publisher marker_pub_; /* publishes markers for visualization */
@@ -62,14 +81,9 @@ class MarkerManager
    */
   void publishDriveGoal() const;
 
-  enum DrawMarkerType {
-    kDst = 0,
-    kStart,
-    kPick, 
-    kDrop
-  };
 
-  visualization_msgs::Marker drawMarker(ObjectPickingTask const& task, int obj_id, DrawMarkerType type) const;
+
+  visualization_msgs::Marker drawMarker(int obj_id, DrawMarkerType type) const;
 
 
   /**
@@ -86,16 +100,6 @@ class MarkerManager
    * 
    */
   void checkOdomPos();
-
-public:
- 
-  MarkerManager(std::vector<ObjectPickingTask> const& tasks);
-
-/**
- * @brief  draw all objects and drop off locations
- * 
- */
-  void start(); 
 
 
 

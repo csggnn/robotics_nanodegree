@@ -5,7 +5,7 @@ MarkerManager::MarkerManager(std::vector<ObjectPickingTask> const &tasks)
   tasks_ = tasks;
 }
 
-visualization_msgs::Marker MarkerManager::drawMarker(int obj_id, DrawMarkerType type) const
+void MarkerManager::drawMarker(int obj_id, MarkerManager::DrawMarkerType type) const
 {
 
   auto const& t = tasks_[obj_id];
@@ -76,33 +76,31 @@ visualization_msgs::Marker MarkerManager::drawMarker(int obj_id, DrawMarkerType 
     marker.action = visualization_msgs::Marker::ADD;
   }
 
+    while (marker_pub_.getNumSubscribers() < 1)
+    {
+      if (!ros::ok())
+      {
+        return;
+      }
+      ROS_WARN_ONCE("Please create a subscriber to the marker");
+      sleep(1);
+    }
+    marker_pub_.publish(marker);
+
 }
 
 void MarkerManager::start()
 {
   marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-  dive_tg_pub_ = n_.advertise<geometry_msgs::Point>("drive_to_point", 1);
+  drive_pub_ = n_.advertise<geometry_msgs::Point>("drive_to_point", 1);
 
   for (int i = 0; i < tasks_.size(); i++)
   {
-    auto obj_marker = drawMarker(tasks_[i], i, kStart);
-    auto dst_marker = drawMarker(tasks_[i], i, kDst);
+    drawMarker(tasks_[i], i, kStart);
+    drawMarker(tasks_[i], i, kDst);
 
-    while (marker_pub.getNumSubscribers() < 1)
-    {
-      if (!ros::ok())
-      {
-        return 0;
-      }
-      ROS_WARN_ONCE("Please create a subscriber to the marker");
-      sleep(1);
-    }
-    marker_pub.publish(dst_marker);
-    marker_pub.publish(obj_marker);
-    sleep(1);
-  }
   
-  if (tasks.size() >0 ) {
+  if (tasks_.size() >0 ) {
     curr_obj_id_ =0;
     pickup_task_ = true;
     publishDriveGoal();
@@ -116,7 +114,7 @@ void MarkerManager::start()
 
 bool MarkerManager::validCurrTask() const
 {
-  return ((curr_obj_id_ > 0) && (curr_obj_id_ < tasks.size()));
+  return ((curr_obj_id_ > 0) && (curr_obj_id_ < tasks_.size()));
 }
 
 bool MarkerManager::getCurrTaskTg(double &x, double &y) const
@@ -130,7 +128,7 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
   return false;
 }
 
-void MarkerManager::publishDriveGoal()
+void MarkerManager::publishDriveGoal() const
 {
 
   geometry_msgs::Point target_point;
@@ -173,7 +171,7 @@ void MarkerManager::checkGoalReached(geometry_msgs::Pose const &odom_pose)
     sleep(2.5);
     drawMarker(curr_obj_id_, pickup_task_ ? kPick : kDrop);
     sleep(2.5);
-    pickup_task_ ! pickup_task_;
+    pickup_task_ = !pickup_task_;
     if (pickup_task_) {
       curr_obj_id_ = curr_obj_id_ + 1;
     } 
