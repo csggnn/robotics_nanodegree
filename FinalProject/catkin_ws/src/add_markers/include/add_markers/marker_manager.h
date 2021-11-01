@@ -2,6 +2,8 @@
 #include <visualization_msgs/Marker.h>
 #include <vector>
 
+#pragma once
+
 struct ObjectPickingTask
 {
   ObjectPickingTask(double x, double y, double to_x, double to_y, double col_r = 0.5, double col_g = 0.5, double col_b = 0.5) : src_x(x), src_y(y), dst_x(to_x), dst_y(to_y), r(col_r), g(col_g), b(col_b) {}
@@ -65,7 +67,7 @@ class MarkerManager
     kStart,
     kPick, 
     kDrop
-  }
+  };
 
   visualization_msgs::Marker drawMarker(ObjectPickingTask const& task, int obj_id, DrawMarkerType type) const;
 
@@ -86,6 +88,9 @@ class MarkerManager
   void checkOdomPos();
 
 public:
+ 
+  MarkerManager(std::vector<ObjectPickingTask> const& tasks);
+
 /**
  * @brief  draw all objects and drop off locations
  * 
