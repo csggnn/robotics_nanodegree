@@ -17,32 +17,39 @@
 // Define a client for to send goal requests to the move_base server through a SimpleActionClient
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-MoveBaseClient ac("move_base", true);
+class Driver {
 
-void driveToGoal(geometry_msgs::Point tg_pos)
-{
-  move_base_msgs::MoveBaseGoal goal;
+  Driver(MoveBaseClient *mbc) mbc_(mbc){};
+  void driveToGoal(geometry_msgs::Point tg_pos)
+  {
+    move_base_msgs::MoveBaseGoal goal;
 
-  goal.target_pose.pose.position = tg_pos;
-  goal.target_pose.header.frame_id = "map";
-  goal.target_pose.header.stamp = ros::Time::now();
-  ROS_INFO("Sending goal");
-  ac.sendGoal(goal);
-  // Wait an infinite time for the results
-  ac.waitForResult();
+    goal.target_pose.pose.position = tg_pos;
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+    // Wait an infinite time for the results
+    ac.waitForResult();
+    // Check if the robot reached its goal
+    if (ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+      ROS_INFO("Hooray, the base moved to: %f, %f, %f!", tg_pos.x, tg_pos.y, tg_pos.z);
+    else
+      ROS_INFO("The base failed to move for some reason");
+  }
 
-  // Check if the robot reached its goal
-  if (ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-    ROS_INFO("Hooray, the base moved to: %f, %f, %f!", tg_pos.x, tg_pos.y, tg_pos.z);
-  else
-    ROS_INFO("The base failed to move for some reason");
-}
+  MoveBaseClient *mbc_ = nullptr;
+};
 
 int main(int argc, char **argv)
 {
   // Initialize the simple_navigation_goals node
   ros::init(argc, argv, "pick_objects_managed");
   //tell the action client that we want to spin a thread by default
+  MoveBaseClient move_base_client("move_base", true);
+  
+  Driver d(&move_base_client);
+
 
   // Wait 5 sec for move_base action server to come up
   while (!ac.waitForServer(ros::Duration(5.0)))
@@ -50,7 +57,7 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for the move_base action server to come up");
   }
   ros::NodeHandle n;
-  n.subscribe("/drive_to_point", 3, &driveToGoal);
+  n.subscribe("drive_to_point", 3, &Driver::driveToGoal, &d);
   ros::spin();
 
   return 0;
