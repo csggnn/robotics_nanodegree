@@ -10,6 +10,8 @@ int main( int argc, char** argv )
   tasks.push_back(ObjectPickingTask(0, 1, 2, 0, 1, 0, 0));
   tasks.push_back(ObjectPickingTask(0, 2, 5, 5, 1, 1, 0));
   tasks.push_back(ObjectPickingTask(-2, 5, 3, -4, 1, 0, 1));
+  
+  ros::init(argc, argv, "marker_manager");
 
   MarkerManager m(tasks);
   m.start();

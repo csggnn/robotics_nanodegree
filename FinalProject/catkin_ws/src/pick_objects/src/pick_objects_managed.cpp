@@ -41,7 +41,7 @@ void driveToGoal(geometry_msgs::Point tg_pos)
 int main(int argc, char **argv)
 {
   // Initialize the simple_navigation_goals node
-  ros::init(argc, argv, "pick_objects");
+  ros::init(argc, argv, "pick_objects_managed");
   //tell the action client that we want to spin a thread by default
 
   // Wait 5 sec for move_base action server to come up
