@@ -26,11 +26,11 @@ class Driver {
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
     ROS_INFO("Sending goal");
-    ac.sendGoal(goal);
+    mbc_->sendGoal(goal);
     // Wait an infinite time for the results
-    ac.waitForResult();
+    mbc_->waitForResult();
     // Check if the robot reached its goal
-    if (ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    if (mbc_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
       ROS_INFO("Hooray, the base moved to: %f, %f, %f!", tg_pos.x, tg_pos.y, tg_pos.z);
     else
       ROS_INFO("The base failed to move for some reason");
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
 
   // Wait 5 sec for move_base action server to come up
-  while (!ac.waitForServer(ros::Duration(5.0)))
+  while (!move_base_client.waitForServer(ros::Duration(5.0)))
   {
     ROS_INFO("Waiting for the move_base action server to come up");
   }
