@@ -86,7 +86,6 @@ void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) co
       sleep(1);
     }
     marker_pub_.publish(marker);
-
 }
 
 void MarkerManager::start()
@@ -115,7 +114,7 @@ void MarkerManager::start()
 
 bool MarkerManager::validCurrTask() const
 {
-  return ((curr_obj_id_ > 0) && (curr_obj_id_ < tasks_.size()));
+  return ((curr_obj_id_ >= 0) && (curr_obj_id_ < tasks_.size()));
 }
 
 bool MarkerManager::getCurrTaskTg(double &x, double &y) const
