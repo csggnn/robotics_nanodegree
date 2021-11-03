@@ -21,6 +21,7 @@ class Driver {
   void driveToGoal(geometry_msgs::Point tg_pos)
   {
     move_base_msgs::MoveBaseGoal goal;
+    ROSINFO("About to send goal")
 
     goal.target_pose.pose.position = tg_pos;
     goal.target_pose.header.frame_id = "map";
@@ -47,7 +48,8 @@ int main(int argc, char **argv)
   MoveBaseClient move_base_client("move_base", true);
   
   Driver d(&move_base_client);
-
+  
+  ROSINFO("Driver created")
 
   // Wait 5 sec for move_base action server to come up
   while (!move_base_client.waitForServer(ros::Duration(5.0)))
@@ -55,6 +57,8 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for the move_base action server to come up");
   }
   ros::NodeHandle n;
+  ROSINFO("Subscribing")
+
   n.subscribe("drive_to_point", 3, &Driver::driveToGoal, &d);
   ros::spin();
 
