@@ -1,13 +1,9 @@
 /**
  * @file pick_object_managed.cpp
- * @author Gianni Casagrande (gianni.casagrande@be.bosch.com)
+ * @author Gianni Casagrande (gianni.casagrande.mail@gmail.com)
  * @brief this version of pick object reads and drives to target locaions published to drive_to_point
  * @version 0.1
  * @date 2021-11-01
- * 
- * Copyright 2021 The Kobi Company. All Rights Reserved.
- * CONFIDENTIAL. AUTHORIZED USE ONLY. DO NOT REDISTRIBUTE.
- * 
  */
 
 #include <ros/ros.h>
@@ -18,8 +14,10 @@
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 class Driver {
+  public:
 
-  Driver(MoveBaseClient *mbc) mbc_(mbc){};
+  Driver(MoveBaseClient *mbc): mbc_(mbc){};
+
   void driveToGoal(geometry_msgs::Point tg_pos)
   {
     move_base_msgs::MoveBaseGoal goal;
