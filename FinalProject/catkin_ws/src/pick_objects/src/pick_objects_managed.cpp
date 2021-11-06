@@ -20,9 +20,13 @@ class Driver {
 
   void driveToGoal(geometry_msgs::Point tg_pos)
   {
+    ROS_INFO("drive_to_point triggers driveToGoal"); 
     move_base_msgs::MoveBaseGoal goal;
-    ROSINFO("About to send goal")
-
+    
+    goal.target_pose.pose.orientation.x = 0.0;
+    goal.target_pose.pose.orientation.y = 0.0;
+    goal.target_pose.pose.orientation.z = 0.0;
+    goal.target_pose.pose.orientation.w = 1.0;
     goal.target_pose.pose.position = tg_pos;
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
@@ -42,14 +46,14 @@ class Driver {
 
 int main(int argc, char **argv)
 {
-  // Initialize the simple_navigation_goals node
+  // Initialize the "pick_objects_managed" node
   ros::init(argc, argv, "pick_objects_managed");
+  ROS_INFO("pick_objects_managed initialized");
   //tell the action client that we want to spin a thread by default
   MoveBaseClient move_base_client("move_base", true);
-  
+  ROS_INFO("MoveBaseClient created");
   Driver d(&move_base_client);
-  
-  ROSINFO("Driver created")
+  ROS_INFO("Driver created");
 
   // Wait 5 sec for move_base action server to come up
   while (!move_base_client.waitForServer(ros::Duration(5.0)))
@@ -57,9 +61,8 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for the move_base action server to come up");
   }
   ros::NodeHandle n;
-  ROSINFO("Subscribing")
-
-  n.subscribe("drive_to_point", 3, &Driver::driveToGoal, &d);
+  ROS_INFO("subscribing to `drive_to_point`");
+  ros::Subscriber sub = n.subscribe("/drive_to_point", 3, &Driver::driveToGoal, &d);
   ros::spin();
 
   return 0;

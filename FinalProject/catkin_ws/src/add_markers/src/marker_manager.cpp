@@ -16,9 +16,9 @@ void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) co
   marker.pose.orientation.z = 0.0;
   marker.pose.orientation.w = 1.0;
 
-  marker.pose.position.x = 0.0;
+  marker.pose.position.z = 0.0;
 
-  marker.header.frame_id = "/map";
+  marker.header.frame_id = "map";
   marker.header.stamp = ros::Time::now();
   marker.lifetime = ros::Duration();
 
@@ -55,7 +55,7 @@ void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) co
   }
 
   /* pick up and start markers are at the start location (although pick up location may not matter with a DELETE) */
-  if ((type = kStart) || (type == kPick))
+  if ((type == kStart) || (type == kPick))
   {
     marker.pose.position.x = t.src_x;
     marker.pose.position.y = t.src_y;
@@ -86,6 +86,10 @@ void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) co
       sleep(1);
     }
     marker_pub_.publish(marker);
+  ROS_INFO("Published marker %d, mode %d at [%f, %f, %f], color [%4.0f %4.0f %4.0f]",
+  obj_id, type, 
+  marker.pose.position.x, marker.pose.position.y, marker.pose.position.z, 
+  marker.color.r, marker.color.g, marker.color.b);
 }
 
 void MarkerManager::start()
@@ -130,16 +134,17 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
 
 void MarkerManager::publishDriveGoal() const
 {
-
   geometry_msgs::Point target_point;
   target_point.z = 0;
-   bool valid = getCurrTaskTg(target_point.x, target_point.y);
+  bool valid = getCurrTaskTg(target_point.x, target_point.y);
 
   if (!valid)
   {
     ROS_WARN_ONCE("MarkerManager::publishDriveGoal: there is no valid goal location for current task");
     return;
   }
+
+  ROS_INFO("publishing goal");
 
   while (drive_pub_.getNumSubscribers() < 1)
   {
@@ -151,11 +156,13 @@ void MarkerManager::publishDriveGoal() const
     sleep(1);
   }
   drive_pub_.publish(target_point);
+  ROS_INFO("published");
 }
 
-void MarkerManager::checkReactGoalReached(geometry_msgs::Pose const &odom_pose)
+void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamped::ConstPtr const &robot_pose)
 {
-  double dist_th_sq = 0.1 * 0.1;
+  static int i =0;
+  double dist_th = 0.25;
   double tg_x, tg_y;
   bool tg_valid = getCurrTaskTg(tg_x, tg_y);
   if (!tg_valid)
@@ -163,11 +170,11 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::Pose const &odom_pose)
     ROS_WARN_ONCE("MarkerManager::checkGolaReached call but no object movement task is active");
     return;
   }
-
-  if ((odom_pose.position.x - tg_x) * (odom_pose.position.x - tg_x) +
-          (odom_pose.position.y - tg_y) * (odom_pose.position.y - tg_y) <
-      dist_th_sq)
+  geometry_msgs::Point const& pos = robot_pose->pose.pose.position;
+  double dist = std::sqrt((pos.x - tg_x) * (pos.x - tg_x) + (pos.y - tg_y) * (pos.y - tg_y));
+  if (dist < dist_th)
   {
+    ROS_INFO("Object %d can be %s", curr_obj_id_,  pickup_task_? "picked up" : "dropped");
     sleep(2.5);
     publishMarker(curr_obj_id_, pickup_task_ ? kPick : kDrop);
     sleep(2.5);
@@ -176,15 +183,23 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::Pose const &odom_pose)
       curr_obj_id_ = curr_obj_id_ + 1;
     } 
 
-    if (validCurrTask()) 
-      publishDriveGoal();
+    if (validCurrTask()) {
+       ROS_INFO("let's now %s object %d", pickup_task_? "pick up" : "drop", curr_obj_id_);
+       publishDriveGoal();
+    }
     else 
       ROS_INFO("All tasks completed");
-  }
+  } else {
+    if (i%1000 == 0)
+    ROS_INFO("odom is is %f, %f : %f m far from the next goal in %f, %f", pos.x, pos.y, dist, tg_x, tg_y);
+    i= (i+1)%100;
+  } 
+  
 }
 
 void MarkerManager::spinOnOdomPos()
 {
-  ros::Subscriber sub = n_.subscribe("/odom", 3, &MarkerManager::checkReactGoalReached, this);
+  ros::Subscriber sub = n_.subscribe("/amcl_pose", 3, &MarkerManager::checkReactGoalReached, this);
+  ROS_INFO("Subscribed to odom, %d publishers", sub.getNumPublishers());
   ros::spin();
 }

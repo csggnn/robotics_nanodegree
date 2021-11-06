@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <vector>
 
 #pragma once
@@ -89,9 +90,9 @@ class MarkerManager
    * @brief check if the robot reached the current goal location.
    * if it is the case, simulate a pick-up/drop-off and trigger the next task
    * 
-   * @param odom_pose 
+   * @param robot_pose 
    */
-  void checkReactGoalReached(geometry_msgs::Pose const& odom_pose);
+  void checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamped::ConstPtr const &robot_pose);
 
    
   /**
