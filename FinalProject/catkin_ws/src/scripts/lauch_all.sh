@@ -1,5 +1,6 @@
 #!/bin/sh
-export TURTLEBOT_GAZEBO_WORLD_FILE=`rospack find turtlebot_gazebo`/worlds/small_world.world
+export TURTLEBOT_GAZEBO_WORLD_FILE=`rospack find simulation_data`/worlds/small_world.world
+export TURTLEBOT_GAZEBO_MAP_FILE=`rospack find simulation_data`/maps/small_world_map.yaml
 
 source  devel/setup.sh
 sleep 5
