@@ -70,6 +70,11 @@ class MarkerManager
 
   //bool target_point_valid_ = false; /* whether this target point is valid (starts at false) */
    
+  double const kRate = 5; /* hz   rate at which we check for position an update goals and markers*/
+  double const kTargetPosPublishTimeout = 5.0 /* s.  Target positions are sent when a new position message is received and found to match a goal position. 
+                                                 However, if we are not receiving new robot positions messages from amcl, we may want to try and unlock by 
+                                                 re-sending the current target position */
+  int spins_form_last_pose_ = 0;
 
   /**
    * @brief assess whether the current task_id_ is valid *
