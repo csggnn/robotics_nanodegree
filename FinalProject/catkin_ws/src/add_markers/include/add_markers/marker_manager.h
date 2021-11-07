@@ -123,10 +123,11 @@ class MarkerManager
 
    
   /**
-   * @brief subscribes to odometry and keeps on checking whether a goal has been reched.
+   * @brief subscribes to odometry and keeps on checking whether a goal has been reached to update target.
+   * draws markers and publishes targets in a loop.
    * 
    */
-  void spinOnOdomPos();
+  void spin();
 
 
 

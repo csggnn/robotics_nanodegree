@@ -257,18 +257,23 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
       }
       else
       {
-        ROS_INFO("All tasks are completed!");
+        ROS_INFO("Last task done");
       }
     }
     sleep(2.5); /* pick up/ drop time simulation */
   }
-  publishAllMarkers();
-  publishDriveGoal();
+
 }
 
-void MarkerManager::spinOnOdomPos()
+void MarkerManager::spin()
 {
   ros::Subscriber sub = n_.subscribe("/amcl_pose", 3, &MarkerManager::checkReactGoalReached, this);
-
-  ros::spin();
+  ros::Rate rate(2); // ROS Rate at 5Hz
+  while (curr_obj_id_ < tasks_.size()) {
+    ros::spinOnce();
+    publishAllMarkers();
+    publishDriveGoal();
+    rate.sleep();
+  }
+  ROS_INFO("All tasks are completed!");
 }
