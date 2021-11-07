@@ -145,7 +145,7 @@ void MarkerManager::start()
   {
     curr_obj_id_ = 0;
     tasks_[curr_obj_id_].status = TaskStatus::kPicking;
-    spinOnOdomPos();
+    this->spin();
   }
   else
   {
