@@ -48,13 +48,18 @@ public:
       ROS_WARN_ONCE("Please create a subscriber to the pick_objects_result topic");
       sleep(1);
     }
-    if (mbc_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    std_msgs::Bool goal_reached;
+    if (mbc_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    {
       ROS_INFO("Hooray, the base moved to: %f, %f, %f!", tg_pos.x, tg_pos.y, tg_pos.z);
-      result_pub_.publish(true);
+      goal_reached.data = true;
+      result_pub_.publish(goal_reached);
     }
-    else {
+    else
+    {
       ROS_INFO("The base failed to move for some reason");
-      result_pub_.publish(false);
+      goal_reached.data = false;
+      result_pub_.publish(goal_reached);
     }
   };
 

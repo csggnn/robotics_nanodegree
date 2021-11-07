@@ -230,10 +230,7 @@ void MarkerManager::checkReactGoalReached(std_msgs::Bool::ConstPtr const &pick_o
   }
   /* the current task can only be in status  kPicking, or kMoving */
   bool pickup_task = (tasks_[curr_obj_id_].status == TaskStatus::kPicking);
-
-  geometry_msgs::Point const &pos = robot_pose->pose.pose.position;
-  double dist = std::sqrt((pos.x - tg_x) * (pos.x - tg_x) + (pos.y - tg_y) * (pos.y - tg_y));
-
+  
   ROS_INFO("robot is at %f, %f : %f m far from the next goal at %f, %f", pos.x, pos.y, dist, tg_x, tg_y);
 
   if (pick_obj_result->data == true)
