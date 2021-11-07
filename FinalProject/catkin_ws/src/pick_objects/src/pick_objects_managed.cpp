@@ -1,7 +1,7 @@
 /**
  * @file pick_object_managed.cpp
  * @author Gianni Casagrande (gianni.casagrande.mail@gmail.com)
- * @brief this version of pick object reads and drives to target locaions published to drive_to_point
+ * @brief this version of pick object reads and drives to target locations published to drive_to_point
  * @version 0.1
  * @date 2021-11-01
  */

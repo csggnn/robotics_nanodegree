@@ -5,10 +5,10 @@ MarkerManager::MarkerManager(std::vector<ObjectPickingTask> const &tasks)
   tasks_ = tasks;
 }
 
-void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) const
+void MarkerManager::publishObjectMarkers(int obj_id, bool publish_dst_loc) const
 {
 
-  ObjectPickingTask const& t = tasks_[obj_id];
+  ObjectPickingTask const &t = tasks_[obj_id];
   visualization_msgs::Marker marker;
 
   marker.pose.orientation.x = 0.0;
@@ -28,93 +28,127 @@ void MarkerManager::publishMarker(int obj_id, MarkerManager::MarkerType type) co
 
   marker.color.a = 1.0;
 
-  /* destination markers look different */
-  if (type == kDst)
+  marker.scale.x = 0.2;
+  marker.scale.y = 0.2;
+  marker.scale.z = 0.3;
+
+  marker.color.r = t.r;
+  marker.color.g = t.g;
+  marker.color.b = t.b;
+
+  marker.ns = "objects";
+
+  switch (t.status)
   {
-    marker.scale.x = 0.5;
-    marker.scale.y = 0.5;
-    marker.scale.z = 0.05;
+  case TaskStatus::kWaiting:
+  case TaskStatus::kPicking:
+  {
+    marker.pose.position.x = t.src_x;
+    marker.pose.position.x = t.src_y;
+    marker.action = visualization_msgs::Marker::ADD;
+    break;
+  }
+  case TaskStatus::kMoving:
+  {
+    marker.pose.position.x = t.src_x;
+    marker.pose.position.x = t.src_y;
+    marker.action = visualization_msgs::Marker::DELETE;
+  }
+  case TaskStatus::kDropped:
+  {
+    marker.pose.position.x = t.dst_x;
+    marker.pose.position.x = t.dst_y;
+    marker.action = visualization_msgs::Marker::ADD;
+  }
+  case TaskStatus::kFailed:
+  {
+    marker.pose.position.x = t.fail_x;
+    marker.pose.position.x = t.fail_y;
+      /* Failed markers are plotted darker. */
 
     marker.color.r = t.r * 0.7;
     marker.color.g = t.g * 0.7;
     marker.color.b = t.b * 0.7;
-
-    marker.ns = "destination_locations";
-  }
-  else
-  {
-    marker.scale.x = 0.2;
-    marker.scale.y = 0.2;
-    marker.scale.z = 0.3;
-
-    marker.color.r = t.r;
-    marker.color.g = t.g;
-    marker.color.b = t.b;
-
-    marker.ns = "objects";
-  }
-
-  /* pick up and start markers are at the start location (although pick up location may not matter with a DELETE) */
-  if ((type == kStart) || (type == kPick))
-  {
-    marker.pose.position.x = t.src_x;
-    marker.pose.position.y = t.src_y;
-  }
-  else
-  {
-    marker.pose.position.x = t.dst_x;
-    marker.pose.position.y = t.dst_y;
-  }
-
-  /* pick up is represented by deleting a marker, all other cases by adding  one */
-  if (type == kPick)
-  {
-    marker.action = visualization_msgs::Marker::DELETE;
-  }
-  else
-  {
     marker.action = visualization_msgs::Marker::ADD;
   }
-
-    while (marker_pub_.getNumSubscribers() < 1)
+  default:
+    ROS_WARN_ONCE("publishObjectMarkers: TaskStatus %d is unknown", (int)(t.status));
+  }
+  while (marker_pub_.getNumSubscribers() < 1)
+  {
+    if (!ros::ok())
     {
-      if (!ros::ok())
-      {
-        return;
-      }
-      ROS_WARN_ONCE("Please create a subscriber to the marker");
-      sleep(1);
+      return;
     }
-    marker_pub_.publish(marker);
-  ROS_INFO("Published marker %d, mode %d at [%f, %f, %f], color [%4.0f %4.0f %4.0f]",
-  obj_id, type, 
-  marker.pose.position.x, marker.pose.position.y, marker.pose.position.z, 
-  marker.color.r, marker.color.g, marker.color.b);
+    ROS_WARN_ONCE("Please create a subscriber to the marker");
+    sleep(1);
+  }
+  marker_pub_.publish(marker);
+  ROS_INFO("Published marker %d, at [%f, %f, %f], color [%4.0f %4.0f %4.0f]",
+           obj_id,
+           marker.pose.position.x, marker.pose.position.y, marker.pose.position.z,
+           marker.color.r, marker.color.g, marker.color.b);
+
+
+  /* Stop here if you do not want to publish destination locations. */
+
+  if (!publish_dst_loc)
+    return;
+
+  visualization_msgs::Marker dst_marker = marker;
+
+  dst_marker.scale.x = 0.5;
+  dst_marker.scale.y = 0.5;
+  dst_marker.scale.z = 0.05;
+
+  /* destinations are darker than objects so that it is easy to see the object at its destination. */
+  dst_marker.color.r *= 0.8;
+  dst_marker.color.g *= 0.8;
+  dst_marker.color.b *= 0.8;
+
+  dst_marker.ns = "destination_locations";
+  dst_marker.pose.position.x = t.dst_x;
+  dst_marker.pose.position.y = t.dst_y;
+
+  dst_marker.action = visualization_msgs::Marker::ADD;
+
+  while (marker_pub_.getNumSubscribers() < 1)
+  {
+    if (!ros::ok())
+    {
+      return;
+    }
+    ROS_WARN_ONCE("Please create a subscriber to the marker");
+    sleep(1);
+  }
+  marker_pub_.publish(dst_marker);
+  ROS_INFO("Published dst marker %d at [%f, %f, %f], color [%4.0f %4.0f %4.0f]",
+           obj_id,
+           dst_marker.pose.position.x, dst_marker.pose.position.y, dst_marker.pose.position.z,
+           dst_marker.color.r, dst_marker.color.g, dst_marker.color.b);
+}
+
+
+void MarkerManager::publishAllMarkers(bool publish_dst_loc) const {
+  for (int i = 0; i< tasks_.size(); i++ ) 
+    publishObjectMarkers(i, publish_dst_loc);
 }
 
 void MarkerManager::start()
 {
   marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
   drive_pub_ = n_.advertise<geometry_msgs::Point>("drive_to_point", 1);
-
-  for (int i = 0; i < tasks_.size(); i++)
+  if (tasks_.size() > 0)
   {
-    publishMarker(i, kStart);
-    publishMarker(i, kDst);
-  }
-
-  
-  if (tasks_.size() >0 ) {
-    curr_obj_id_ =0;
-    pickup_task_ = true;
-    publishDriveGoal();
+    curr_obj_id_ = 0;
+    tasks_[curr_obj_id_].status = TaskStatus::kPicking;
     spinOnOdomPos();
-  } else {
+  }
+  else
+  {
     ROS_INFO("No tasks!");
   }
 }
-
-
 
 bool MarkerManager::validCurrTask() const
 {
@@ -125,8 +159,26 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
 {
   if (validCurrTask())
   {
-    x = pickup_task_ ? tasks_[curr_obj_id_].src_x : tasks_[curr_obj_id_].dst_x;
-    y = pickup_task_ ? tasks_[curr_obj_id_].src_y : tasks_[curr_obj_id_].dst_y;
+    switch (tasks_[curr_obj_id_].status)
+    {
+    case kMoving:
+    {
+      x = tasks_[curr_obj_id_].dst_x;
+      y = tasks_[curr_obj_id_].dst_y;
+      break;
+    }
+    case kPicking:
+    {
+      x = tasks_[curr_obj_id_].src_x;
+      y = tasks_[curr_obj_id_].src_y;
+      break;
+    }
+    default:
+    {
+      ROS_WARN_ONCE("MarkerManager::getCurrTaskTg: the current task %d is in status %d, there is nothing to do apparently", curr_obj_id_, tasks_[curr_obj_id_].status);
+      return false;
+    }
+    }
     return true;
   }
   return false;
@@ -140,7 +192,7 @@ void MarkerManager::publishDriveGoal() const
 
   if (!valid)
   {
-    ROS_WARN_ONCE("MarkerManager::publishDriveGoal: there is no valid goal location for current task");
+    ROS_WARN_ONCE("MarkerManager::publishDriveGoal: there is no valid goal location for current task %d", curr_obj_id_);
     return;
   }
 
@@ -156,50 +208,64 @@ void MarkerManager::publishDriveGoal() const
     sleep(1);
   }
   drive_pub_.publish(target_point);
-  ROS_INFO("published");
+  ROS_INFO("goal location %f, %f published", target_point.x, target_point.y);
 }
 
 void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamped::ConstPtr const &robot_pose)
 {
-  static int i =0;
+  static int i = 0;
   double dist_th = 0.25;
   double tg_x, tg_y;
   bool tg_valid = getCurrTaskTg(tg_x, tg_y);
   if (!tg_valid)
   {
-    ROS_WARN_ONCE("MarkerManager::checkGolaReached call but no object movement task is active");
+    ROS_WARN_ONCE("MarkerManager::checkGoalReached call but no object movement task is active");
     return;
   }
-  geometry_msgs::Point const& pos = robot_pose->pose.pose.position;
+  /* the current task can only be in status  kPicking, or kMoving */
+  bool pickup_task = (tasks_[curr_obj_id_].status == TaskStatus::kPicking);
+
+  geometry_msgs::Point const &pos = robot_pose->pose.pose.position;
   double dist = std::sqrt((pos.x - tg_x) * (pos.x - tg_x) + (pos.y - tg_y) * (pos.y - tg_y));
+
+  if (i % 10 == 0) 
+    ROS_INFO("robot is at %f, %f : %f m far from the next goal at %f, %f", pos.x, pos.y, dist, tg_x, tg_y);
+  i = (i + 1) % 10;
+  
   if (dist < dist_th)
   {
-    ROS_INFO("Object %d can be %s", curr_obj_id_,  pickup_task_? "picked up" : "dropped");
-    sleep(2.5);
-    publishMarker(curr_obj_id_, pickup_task_ ? kPick : kDrop);
-    sleep(2.5);
-    pickup_task_ = !pickup_task_;
-    if (pickup_task_) {
-      curr_obj_id_ = curr_obj_id_ + 1;
-    } 
-
-    if (validCurrTask()) {
-       ROS_INFO("let's now %s object %d", pickup_task_? "pick up" : "drop", curr_obj_id_);
-       publishDriveGoal();
+    ROS_INFO("Object %d can be %s", curr_obj_id_, pickup_task ? "picked up" : "dropped");
+    sleep(2.5); /* pick up/ drop time simulation */
+    if (pickup_task)
+    {
+      tasks_[curr_obj_id_].status = TaskStatus::kMoving;
     }
-    else 
-      ROS_INFO("All tasks completed");
-  } else {
-    if (i%1000 == 0)
-    ROS_INFO("odom is is %f, %f : %f m far from the next goal in %f, %f", pos.x, pos.y, dist, tg_x, tg_y);
-    i= (i+1)%100;
-  } 
-  
+    else
+    {
+      tasks_[curr_obj_id_].status = TaskStatus::kDropped;
+      if (curr_obj_id_ < tasks_.size())
+      {
+        curr_obj_id_++;
+        if (tasks_[curr_obj_id_].status != TaskStatus::kWaiting)
+        {
+          ROS_WARN_ONCE("checkReactGoalReached moving to task %d but found in status %d which is not kWaiting", curr_obj_id_, (int) tasks_[curr_obj_id_].status);
+        }
+        tasks_[curr_obj_id_].status = TaskStatus::kPicking;
+      }
+      else
+      {
+        ROS_INFO("Last task is competed");
+      }
+    }
+    sleep(2.5); /* pick up/ drop time simulation */
+  }
+  publishMarkers();
+  publishDriveGoal();
 }
 
 void MarkerManager::spinOnOdomPos()
 {
   ros::Subscriber sub = n_.subscribe("/amcl_pose", 3, &MarkerManager::checkReactGoalReached, this);
-  ROS_INFO("Subscribed to odom, %d publishers", sub.getNumPublishers());
+
   ros::spin();
 }

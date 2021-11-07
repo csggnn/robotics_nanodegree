@@ -5,16 +5,31 @@
 
 #pragma once
 
+enum struct TaskStatus{
+  kWaiting,
+  kPicking,
+  kMoving,
+  kDropped,
+  kFailed
+}
+
+/**
+ * @brief Describes all parameters related to a task:
+ * 
+ */
 struct ObjectPickingTask
 {
   ObjectPickingTask(double x, double y, double to_x, double to_y, double col_r = 0.5, double col_g = 0.5, double col_b = 0.5) : src_x(x), src_y(y), dst_x(to_x), dst_y(to_y), r(col_r), g(col_g), b(col_b) {}
-  double src_x;
+  double src_x;  /* start location of the object */
   double src_y;
-  double dst_x;
-  double dst_y;
-  double r;
+  double dst_x;  /* intended drop locaton */
+  double dst_y;  
+  double fail_x = 0.0; /* failed drop location, where the object is left when it can not be picked up or dropped */
+  double fail_y = 0.0;
+  double r;      /* color of the object, used to match objects with destination locations */
   double g;
   double b;
+  TaskStatus status = TaskStatus::kWaiting; /* status od operation on this particular task */
 };
 
 /**
@@ -52,7 +67,6 @@ class MarkerManager
   ros::Publisher drive_pub_;  /* publishes drive targets, read by the pick object node */
 
   int curr_obj_id_ = -1;         /* which object are we picking up/delivering */
-  bool pickup_task_ = true;      /* true if performing a pick-up, false if performing a drop-off */
 
   //bool target_point_valid_ = false; /* whether this target point is valid (starts at false) */
    
@@ -83,7 +97,20 @@ class MarkerManager
   void publishDriveGoal() const;
 
 
-  void publishMarker(int obj_id, MarkerType type) const;
+  /**
+   * @brief publish markers associated to an object picking task
+   * 
+   * @param obj_id  object picking task
+   * @param publish_dst_loc publish a marker for the destination location too
+   */
+  void publishObjectMarkers(int obj_id,   bool publish_dst_loc = true) const;
+
+  /**
+   * @brief calls publishObjectMarkers on all tasks 
+   * 
+   * @param publish_dst_loc 
+   */
+  void publishAllMarkers(bool publish_dst_loc = true ) const;
 
 
   /**
