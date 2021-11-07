@@ -259,7 +259,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
     }
     sleep(2.5); /* pick up/ drop time simulation */
   }
-  publishMarkers();
+  publishAllMarkers();
   publishDriveGoal();
 }
 
