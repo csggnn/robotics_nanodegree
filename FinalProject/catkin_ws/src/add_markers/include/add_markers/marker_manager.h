@@ -67,7 +67,7 @@ class MarkerManager
   int curr_obj_id_ = -1;         /* which object are we picking up/delivering */
    
   double const kRate = 5; /* hz   rate at which we check for position an update goals and markers*/
-  double const kTargetPosPublishTimeout = 60.0; /* s.  Target positions are sent when a new pick object result message is received. 
+  double const kTargetPosPublishTimeout = 60.0; /* Target positions are sent when a new pick object result message is received. 
                                                  However, if a pick object result messag gets lost, we may want to try and unlock the process
                                                  re-sending the current target position */
   int spins_form_last_pose_ = 0;

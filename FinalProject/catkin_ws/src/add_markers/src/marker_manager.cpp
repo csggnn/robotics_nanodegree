@@ -134,14 +134,13 @@ void MarkerManager::publishAllMarkers(bool publish_dst_loc) const
   for (int i = 0; i < tasks_.size(); i++)
   {
     publishObjectMarkers(i, publish_dst_loc);
-    sleep(0.3);
   }
 }
 
 void MarkerManager::start()
 {
-  marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-  drive_pub_ = n_.advertise<geometry_msgs::Point>("drive_to_point", 1);
+  marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 20); /* to support publishing multiple markers in a loop */
+  drive_pub_ = n_.advertise<geometry_msgs::Point>("drive_to_point", 3);
   if (tasks_.size() > 0)
   {
     publishAllMarkers(true);
