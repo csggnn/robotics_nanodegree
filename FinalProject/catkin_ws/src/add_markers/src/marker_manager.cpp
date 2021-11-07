@@ -250,7 +250,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
     }    
     sleep(2.5); /* pick up/ drop time simulation */
     publishObjectMarkers(curr_obj_id_, false);
-    if (tasks_[curr_obj_id_].status = TaskStatus::kDropped) {
+    if (tasks_[curr_obj_id_].status == TaskStatus::kDropped) {
       curr_obj_id_++;
       if (curr_obj_id_ < tasks_.size())
       {
