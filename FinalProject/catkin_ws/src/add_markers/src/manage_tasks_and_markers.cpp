@@ -16,6 +16,6 @@ int main( int argc, char** argv )
   MarkerManager m(tasks);
   m.start();
 
-  ROS_INFO("All tasks completed.");
+  ROS_INFO("Manage Tasks Exiting");
 
 }

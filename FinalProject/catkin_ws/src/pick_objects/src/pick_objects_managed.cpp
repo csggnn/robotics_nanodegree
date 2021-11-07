@@ -9,20 +9,24 @@
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include <std_msgs/Bool.h>
 
 // Define a client for to send goal requests to the move_base server through a SimpleActionClient
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-class Driver {
-  public:
-
-  Driver(MoveBaseClient *mbc): mbc_(mbc){};
+class Driver
+{
+public:
+  Driver(MoveBaseClient *mbc) : mbc_(mbc)
+  {
+    result_pub_ = n_.advertise<std_msgs::Bool>("pick_objects_result", 1);
+  };
 
   void driveToGoal(geometry_msgs::Point tg_pos)
   {
-    ROS_INFO("drive_to_point triggers driveToGoal"); 
+    ROS_INFO("drive_to_point triggers driveToGoal");
     move_base_msgs::MoveBaseGoal goal;
-    
+
     goal.target_pose.pose.orientation.x = 0.0;
     goal.target_pose.pose.orientation.y = 0.0;
     goal.target_pose.pose.orientation.z = 0.0;
@@ -35,12 +39,28 @@ class Driver {
     // Wait an infinite time for the results
     mbc_->waitForResult();
     // Check if the robot reached its goal
-    if (mbc_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    while (result_pub_.getNumSubscribers() < 1)
+    {
+      if (!ros::ok())
+      {
+        return;
+      }
+      ROS_WARN_ONCE("Please create a subscriber to the pick_objects_result topic");
+      sleep(1);
+    }
+    if (mbc_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
       ROS_INFO("Hooray, the base moved to: %f, %f, %f!", tg_pos.x, tg_pos.y, tg_pos.z);
-    else
+      result_pub_.publish(true);
+    }
+    else {
       ROS_INFO("The base failed to move for some reason");
-  }
+      result_pub_.publish(false);
+    }
+  };
 
+private:
+  ros::Publisher result_pub_;
+  ros::NodeHandle n_;
   MoveBaseClient *mbc_ = nullptr;
 };
 

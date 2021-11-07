@@ -64,10 +64,9 @@ void MarkerManager::publishObjectMarkers(int obj_id, bool publish_dst_loc) const
   }
   case TaskStatus::kFailed:
   {
-    marker.pose.position.x = t.fail_x;
-    marker.pose.position.y = t.fail_y;
-      /* Failed markers are plotted darker. */
-
+    marker.pose.position.x = t.src_x;
+    marker.pose.position.y = t.src_y;
+    /* Failed markers are plotted darker. */
     marker.color.r = t.r * 0.7;
     marker.color.g = t.g * 0.7;
     marker.color.b = t.b * 0.7;
@@ -91,7 +90,6 @@ void MarkerManager::publishObjectMarkers(int obj_id, bool publish_dst_loc) const
            obj_id,
            marker.pose.position.x, marker.pose.position.y, marker.pose.position.z,
            marker.color.r, marker.color.g, marker.color.b);
-
 
   /* Stop here if you do not want to publish destination locations. */
 
@@ -131,9 +129,10 @@ void MarkerManager::publishObjectMarkers(int obj_id, bool publish_dst_loc) const
            dst_marker.color.r, dst_marker.color.g, dst_marker.color.b);
 }
 
-
-void MarkerManager::publishAllMarkers(bool publish_dst_loc) const {
-  for (int i = 0; i< tasks_.size(); i++ ) {
+void MarkerManager::publishAllMarkers(bool publish_dst_loc) const
+{
+  for (int i = 0; i < tasks_.size(); i++)
+  {
     publishObjectMarkers(i, publish_dst_loc);
     sleep(0.3);
   }
@@ -181,7 +180,7 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
     }
     default:
     {
-      ROS_WARN_ONCE("MarkerManager::getCurrTaskTg: the current task %d is in status %d, there is nothing to do apparently", curr_obj_id_, (int) tasks_[curr_obj_id_].status);
+      ROS_WARN_ONCE("MarkerManager::getCurrTaskTg: the current task %d is in status %d, there is nothing to do apparently", curr_obj_id_, (int)tasks_[curr_obj_id_].status);
       return false;
     }
     }
@@ -217,11 +216,11 @@ void MarkerManager::publishDriveGoal() const
   ROS_INFO("goal location %f, %f published", target_point.x, target_point.y);
 }
 
-void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamped::ConstPtr const &robot_pose)
+void MarkerManager::checkReactGoalReached(std_msgs::Bool::ConstPtr const &pick_obj_result)
 {
   spins_form_last_pose_ = 0;
   static int i = 0;
-  double dist_th = 0.25;
+  double dist_th = 0.35;
   double tg_x, tg_y;
   bool tg_valid = getCurrTaskTg(tg_x, tg_y);
   if (!tg_valid)
@@ -236,55 +235,67 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
   double dist = std::sqrt((pos.x - tg_x) * (pos.x - tg_x) + (pos.y - tg_y) * (pos.y - tg_y));
 
   ROS_INFO("robot is at %f, %f : %f m far from the next goal at %f, %f", pos.x, pos.y, dist, tg_x, tg_y);
-  
-  if (dist < dist_th)
+
+  if (*pick_obj_result == true)
   {
-    ROS_INFO("Object %d can be %s", curr_obj_id_, pickup_task ? "picked up" : "dropped");
     sleep(2.5); /* pick up/ drop time simulation */
     if (pickup_task)
     {
+      ROS_INFO("Object %d can be picked up", curr_obj_id_);
       tasks_[curr_obj_id_].status = TaskStatus::kMoving;
     }
     else
     {
+      ROS_INFO("Object %d can be dropped up", curr_obj_id_);
       tasks_[curr_obj_id_].status = TaskStatus::kDropped;
-    }    
+    }
     sleep(2.5); /* pick up/ drop time simulation */
     publishObjectMarkers(curr_obj_id_, false);
+  }
+  else
+  {
+    ROS_INFO("Object %d can not be %s", curr_obj_id_, pickup_task ? "picked up" : "dropped");
+    tasks_[curr_obj_id_].status = TaskStatus::kFailed;
+    publishObjectMarkers(curr_obj_id_, true);
+  }
 
-    if (pickup_task) {
-      ROS_INFO("move on to dropping object %d", curr_obj_id_);
+  if (pickup_task)
+  {
+    ROS_INFO("move on to dropping object %d", curr_obj_id_);
+    publishDriveGoal();
+  }
+  else
+  { /* in case or drop or in any case of fail, move on. */
+    curr_obj_id_++;
+    if (curr_obj_id_ < tasks_.size())
+    {
+      if (tasks_[curr_obj_id_].status != TaskStatus::kWaiting)
+      {
+        ROS_WARN_ONCE("checkReactGoalReached moving to task %d but found in status %d which is not kWaiting", curr_obj_id_, (int)tasks_[curr_obj_id_].status);
+      }
+      tasks_[curr_obj_id_].status = TaskStatus::kPicking;
+      ROS_INFO("move on to picking object %d", curr_obj_id_);
       publishDriveGoal();
-    } else {
-      curr_obj_id_++;
-      if (curr_obj_id_ < tasks_.size())
-      {
-        if (tasks_[curr_obj_id_].status != TaskStatus::kWaiting)
-        {
-          ROS_WARN_ONCE("checkReactGoalReached moving to task %d but found in status %d which is not kWaiting", curr_obj_id_, (int) tasks_[curr_obj_id_].status);
-        }
-        tasks_[curr_obj_id_].status = TaskStatus::kPicking;
-        ROS_INFO("move on to picking object %d", curr_obj_id_);
-        publishDriveGoal();
-      }
-      else
-      {
-        ROS_INFO("Last task done");
-      }
+    }
+    else
+    {
+      ROS_INFO("Last task done");
     }
   }
 }
 
 void MarkerManager::spin()
 {
-  ros::Subscriber sub = n_.subscribe("/amcl_pose", 3, &MarkerManager::checkReactGoalReached, this);
+  ros::Subscriber sub = n_.subscribe("pick_objects_result", 3, &MarkerManager::checkReactGoalReached, this);
 
   ros::Rate rate(kRate); // ROS Rate at 5Hz
   spins_form_last_pose_ = 0;
-  while (curr_obj_id_ < tasks_.size()) {
-    spins_form_last_pose_ ++;
+  while (curr_obj_id_ < tasks_.size())
+  {
+    spins_form_last_pose_++;
     ros::spinOnce();
-    if (spins_form_last_pose_ > (int (kTargetPosPublishTimeout * kRate))) {
+    if (spins_form_last_pose_ > (int(kTargetPosPublishTimeout * kRate)))
+    {
       ROS_INFO("A goal will been published after more than %f without receiving messages on amcl_pose topic", kTargetPosPublishTimeout);
       publishDriveGoal();
       spins_form_last_pose_ = 0;

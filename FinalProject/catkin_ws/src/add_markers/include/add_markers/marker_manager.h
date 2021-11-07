@@ -24,8 +24,6 @@ struct ObjectPickingTask
   double src_y;
   double dst_x;  /* intended drop locaton */
   double dst_y;  
-  double fail_x = 0.0; /* failed drop location, where the object is left when it can not be picked up or dropped */
-  double fail_y = 0.0;
   double r;      /* color of the object, used to match objects with destination locations */
   double g;
   double b;
@@ -69,8 +67,8 @@ class MarkerManager
   int curr_obj_id_ = -1;         /* which object are we picking up/delivering */
    
   double const kRate = 5; /* hz   rate at which we check for position an update goals and markers*/
-  double const kTargetPosPublishTimeout = 5.0; /* s.  Target positions are sent when a new position message is received and found to match a goal position. 
-                                                 However, if we are not receiving new robot positions messages from amcl, we may want to try and unlock by 
+  double const kTargetPosPublishTimeout = 60.0; /* s.  Target positions are sent when a new pick object result message is received. 
+                                                 However, if a pick object result messag gets lost, we may want to try and unlock the process
                                                  re-sending the current target position */
   int spins_form_last_pose_ = 0;
 
