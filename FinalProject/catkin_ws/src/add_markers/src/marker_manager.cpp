@@ -147,6 +147,7 @@ void MarkerManager::start()
     publishAllMarkers(true);
     curr_obj_id_ = 0;
     tasks_[curr_obj_id_].status = TaskStatus::kPicking;
+    publishDriveGoal();
     this->spin();
   }
   else
