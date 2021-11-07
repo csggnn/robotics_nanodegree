@@ -11,7 +11,7 @@ enum struct TaskStatus{
   kMoving,
   kDropped,
   kFailed
-}
+};
 
 /**
  * @brief Describes all parameters related to a task:
