@@ -133,9 +133,10 @@ void MarkerManager::publishObjectMarkers(int obj_id, bool publish_dst_loc) const
 
 
 void MarkerManager::publishAllMarkers(bool publish_dst_loc) const {
-  for (int i = 0; i< tasks_.size(); i++ ) 
+  for (int i = 0; i< tasks_.size(); i++ ) {
     publishObjectMarkers(i, publish_dst_loc);
     sleep(0.3);
+  }
 }
 
 void MarkerManager::start()
@@ -250,6 +251,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
     }    
     sleep(2.5); /* pick up/ drop time simulation */
     publishObjectMarkers(curr_obj_id_, false);
+
     if (tasks_[curr_obj_id_].status == TaskStatus::kDropped) {
       curr_obj_id_++;
       if (curr_obj_id_ < tasks_.size())
@@ -259,6 +261,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
           ROS_WARN_ONCE("checkReactGoalReached moving to task %d but found in status %d which is not kWaiting", curr_obj_id_, (int) tasks_[curr_obj_id_].status);
         }
         tasks_[curr_obj_id_].status = TaskStatus::kPicking;
+        ROS_INFO("move on to picking object %d", curr_obj_id_)
         publishDriveGoal();
       }
       else
@@ -266,6 +269,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
         ROS_INFO("Last task done");
       }
     } else {
+      ROS_INFO("move on to dropping object %d", curr_obj_id_)
       publishDriveGoal();
     }
   }
