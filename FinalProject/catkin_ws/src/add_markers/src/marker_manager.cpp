@@ -44,32 +44,35 @@ void MarkerManager::publishObjectMarkers(int obj_id, bool publish_dst_loc) const
   case TaskStatus::kPicking:
   {
     marker.pose.position.x = t.src_x;
-    marker.pose.position.x = t.src_y;
+    marker.pose.position.y = t.src_y;
     marker.action = visualization_msgs::Marker::ADD;
     break;
   }
   case TaskStatus::kMoving:
   {
     marker.pose.position.x = t.src_x;
-    marker.pose.position.x = t.src_y;
+    marker.pose.position.y = t.src_y;
     marker.action = visualization_msgs::Marker::DELETE;
+    break;
   }
   case TaskStatus::kDropped:
   {
     marker.pose.position.x = t.dst_x;
-    marker.pose.position.x = t.dst_y;
+    marker.pose.position.y = t.dst_y;
     marker.action = visualization_msgs::Marker::ADD;
+    break;
   }
   case TaskStatus::kFailed:
   {
     marker.pose.position.x = t.fail_x;
-    marker.pose.position.x = t.fail_y;
+    marker.pose.position.y = t.fail_y;
       /* Failed markers are plotted darker. */
 
     marker.color.r = t.r * 0.7;
     marker.color.g = t.g * 0.7;
     marker.color.b = t.b * 0.7;
     marker.action = visualization_msgs::Marker::ADD;
+    break;
   }
   default:
     ROS_WARN_ONCE("publishObjectMarkers: TaskStatus %d is unknown", (int)(t.status));
@@ -175,7 +178,7 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
     }
     default:
     {
-      ROS_WARN_ONCE("MarkerManager::getCurrTaskTg: the current task %d is in status %d, there is nothing to do apparently", curr_obj_id_, tasks_[curr_obj_id_].status);
+      ROS_WARN_ONCE("MarkerManager::getCurrTaskTg: the current task %d is in status %d, there is nothing to do apparently", curr_obj_id_, (int) tasks_[curr_obj_id_].status);
       return false;
     }
     }
@@ -243,7 +246,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
     else
     {
       tasks_[curr_obj_id_].status = TaskStatus::kDropped;
-      if (curr_obj_id_ < tasks_.size())
+      if (curr_obj_id_ < tasks_.size()-1)
       {
         curr_obj_id_++;
         if (tasks_[curr_obj_id_].status != TaskStatus::kWaiting)
@@ -254,7 +257,7 @@ void MarkerManager::checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamp
       }
       else
       {
-        ROS_INFO("Last task is competed");
+        ROS_INFO("All tasks are completed!");
       }
     }
     sleep(2.5); /* pick up/ drop time simulation */
