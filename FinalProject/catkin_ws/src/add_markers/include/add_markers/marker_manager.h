@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <std_msgs/Bool.h>
 #include <vector>
 
 #pragma once
