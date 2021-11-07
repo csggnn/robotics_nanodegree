@@ -120,7 +120,7 @@ class MarkerManager
    * 
    * @param robot_pose 
    */
-  void checkReactGoalReached(geometry_msgs::PoseWithCovarianceStamped::ConstPtr const &robot_pose);
+  void checkReactGoalReached(std_msgs::Bool::ConstPtr const & goal_reached);
 
    
   /**

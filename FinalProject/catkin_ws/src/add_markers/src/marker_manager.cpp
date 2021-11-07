@@ -236,7 +236,7 @@ void MarkerManager::checkReactGoalReached(std_msgs::Bool::ConstPtr const &pick_o
 
   ROS_INFO("robot is at %f, %f : %f m far from the next goal at %f, %f", pos.x, pos.y, dist, tg_x, tg_y);
 
-  if (*pick_obj_result == true)
+  if (pick_obj_result->data == true)
   {
     sleep(2.5); /* pick up/ drop time simulation */
     if (pickup_task)
