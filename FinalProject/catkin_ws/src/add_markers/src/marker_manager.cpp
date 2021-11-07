@@ -161,13 +161,13 @@ bool MarkerManager::getCurrTaskTg(double &x, double &y) const
   {
     switch (tasks_[curr_obj_id_].status)
     {
-    case kMoving:
+    case TaskStatus::kMoving:
     {
       x = tasks_[curr_obj_id_].dst_x;
       y = tasks_[curr_obj_id_].dst_y;
       break;
     }
-    case kPicking:
+    case TaskStatus::kPicking:
     {
       x = tasks_[curr_obj_id_].src_x;
       y = tasks_[curr_obj_id_].src_y;
