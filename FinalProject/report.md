@@ -27,10 +27,15 @@ The packages defined in this project are the following:
     - publishes target drive locations to a `drive_to_point` topic
     - subscribes to a `pick_objects_result` topic to know whether its `drive_to_point` requests have been fulfilled. 
     - Hangles marker visualization to simulate pick-ups and drop-offs.
-- the **simulation_data** package includes the world fle where the robot navigates, and some maps used for testing.
+- the **simulation_data** package includes the world fle where the robot navigates, maps used for testing (the mp generated from the gazebo file and maps generated during SLAM via map_server)
 
 
 ## Project Scripts ##
 
-`home service robot.sh` is the main script used to run the project. Task schefuling and visualization, localization and navigation are used by this script to simulate a robot navigating trough an environment and picking up and dropping objects. AMCL is used for localization on a saved map. 
-`test_slam.sh` is the script used to actually run gmapping and build a map of the environment, which is then used by AMCL.
+`test_slam.sh` is the script used to actually run gmapping and build a map of the environment, which is then used by AMCL. maps have been saved via `map_server`
+`home service robot.sh` is the main script used to run the project. Task scheduling and visualization, localization and navigation are used by this script to simulate a robot navigating trough an environment and picking up and dropping objects. AMCL is used for localization on a saved map. 
+
+## Implementation Choices #
+In my implementation,  `manage_tasks_and_markers` performs a sequence of pickup and drop tasks and takes care ov visualizing the markers. At start-up, 4 object markers and 4 destination locations should be visualized. The robot will try to pick up each object and move it to its corresponding location. 
+One of the destination location has been selected so that it can not be reached by the robot. In this case, when navigation results in a failure, the object and the destination location are darkened.
+`pick_object_managed` acts as a wrapper over a SimpleActionClient, sending goal locations and receiving results which are propagated over to `manage_tasks_and_markers` 
